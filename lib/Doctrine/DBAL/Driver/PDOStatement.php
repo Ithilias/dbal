@@ -101,11 +101,20 @@ class PDOStatement extends \PDOStatement implements Statement
      */
     public function execute($params = null)
     {
+        set_error_handler([$this, "handleError"]);
         try {
-            return parent::execute($params);
+            $response = parent::execute($params);
+            restore_error_handler();
+            return $response;
         } catch (\PDOException $exception) {
+            restore_error_handler();
             throw new PDOException($exception);
         }
+    }
+
+    private function handleError($errno, $errstr, $errfile, $errline) {
+        restore_error_handler();
+        throw new RuntimeException($errstr . $errfile . $errline, $errno);
     }
 
     /**
